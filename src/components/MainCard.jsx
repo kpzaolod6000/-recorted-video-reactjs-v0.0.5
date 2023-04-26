@@ -3,13 +3,8 @@ import {
   Card,
   CardHeader,
   CardBody,
-  CardFooter,
   Heading,
-  Stack,
-  StackDivider,
-  Text,
   Box,
-  Button,
 } from "@chakra-ui/react";
 import Video from "./Video";
 import DataVideos from "../assets/constant/DataVideos";

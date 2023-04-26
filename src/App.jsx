@@ -4,7 +4,6 @@ import MainCard from './components/MainCard'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ChakraProvider } from '@chakra-ui/react'
 import DetailVideo from "./components/DetailVideo";
-import DetailVideoTest from "./components/DetailVideoTest";
 
 function App() {
   return (
@@ -13,7 +12,6 @@ function App() {
       <Routes>
         <Route path="/" element={<MainCard/>} />
         <Route path="/detail-video/:id" element={<DetailVideo/>} />
-        <Route path="/detail-video-test/:id" element={<DetailVideoTest/>} />
       </Routes>
       </BrowserRouter>
     </ChakraProvider>

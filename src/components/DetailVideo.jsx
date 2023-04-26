@@ -1,9 +1,7 @@
 import React, {
-  MutableRefObject,
   useRef,
   useState,
   useEffect,
-  useCallback,
 } from "react";
 import {
   ImPlay2,
@@ -13,22 +11,21 @@ import {
   ImCross,
   ImSpinner11
 } from "react-icons/im";
-import { useNavigate, useParams } from "react-router-dom";
-import DataVideos from '../assets/constant/DataVideos'
 
 import {
   Card,
   CardHeader,
   CardBody,
-  CardFooter,
   Heading,
-  Stack,
-  StackDivider,
-  Text,
   Box,
   IconButton,
   Icon,
 } from "@chakra-ui/react";
+
+import { useNavigate, useParams } from "react-router-dom";
+import DataVideos from '../assets/constant/DataVideos'
+import {result} from '../assets/constant/ResultRecord'
+import '../assets/css/PointRec.css';
 
 const DetailVideo = () => {
   const [recordedBlobsState, setRecordedBlobsState] = useState(DataVideos);
@@ -37,11 +34,10 @@ const DetailVideo = () => {
   const [newPage, setNewPage] = useState(false);
 
   const params = useParams();
-  
-
   const navigate = useNavigate();
 
   const videoGum = useRef();
+  const videoRecorder = useRef();
   const msmError = useRef();
   const codecPreferences = useRef();
 
@@ -49,14 +45,18 @@ const DetailVideo = () => {
   let mediaRecorder;
 
   const handleClickHome = () => {
-    if (window.stream) {
-      console.log("apagar camara");
-      window.stream.getTracks().forEach((track) => {
-        track.stop();
-      });
-    }
+    if (!isPlay){
+      if (window.stream) {
+        console.log("apagar camara");
+        window.stream.getTracks().forEach((track) => {
+          track.stop();
+        });
+      }
 
-    navigate("/");
+      result['recordedBlobsState'] = recordedBlobsState;
+      result['codecPreferences'] = codecPreferences.current;
+      navigate("/");
+    }
   };
 
   const handleDataAvailable = (event) => {
@@ -189,24 +189,24 @@ const DetailVideo = () => {
     console.log("Using media constraints:", constraints);
     await init(constraints);
   };
-
-  /*desaparecera*/
+  
   const handleClickPlayRecorded = () => {
     
-    const recordedVideo = document.querySelector('video#recorded');
+    // const recordedVideo = document.querySelector('video#recorded');
     const mimeType = codecPreferences.current.options[
       codecPreferences.current.selectedIndex
     ].value.split(";", 1)[0];
 
-    console.log("mimeType", mimeType);
-    console.log("recordedBlobs", recordedBlobsState);
+    console.log("mimeType---------", mimeType);
+    console.log("recordedBlobs-------", recordedBlobsState);
+    const BlobId = recordedBlobsState.find((res) => res.id == params.id);
 
-    const superBuffer = new Blob(recordedBlobsState, { type: mimeType });
-    recordedVideo.src = null;
-    recordedVideo.srcObject = null;
-    recordedVideo.src = window.URL.createObjectURL(superBuffer);
-    recordedVideo.controls = true;
-    recordedVideo.play();
+    const superBuffer = new Blob(BlobId.response, { type: mimeType });
+    videoRecorder.current.src = null;
+    videoRecorder.current.srcObject = null;
+    videoRecorder.current.src = window.URL.createObjectURL(superBuffer);
+    videoRecorder.current.controls = true;
+    videoRecorder.current.play();
   };
 
 
@@ -222,34 +222,59 @@ const DetailVideo = () => {
   const handleClickBack = () => {
     console.log("back");
 
-    // DataVideos.forEach((video) => {
-    //   if (video.id == params.id) video.response = recordedBlobs;
-    // });
+    if (!isPlay){
+      setIsPlay(false);
+      setMediaRecorderState(null);
+      setNewPage((prev) => !prev);
 
-    setIsPlay(false);
-    setMediaRecorderState(null);
-    setNewPage((prev) => !prev);
+      const pageIndex = parseInt(params.id) - 1;
 
-    const pageIndex = parseInt(params.id) - 1;
-
-    navigate("/detail-video/" + (pageIndex <= 0 ? 1 : pageIndex));
+      navigate("/detail-video/" + (pageIndex <= 0 ? 1 : pageIndex));
+    }
   };
 
   const handleClickNext = () => {
     console.log("next");
 
-    console.log(recordedBlobsState);
-
-    setIsPlay(false);
-    setMediaRecorderState(null);
-    setNewPage((prev) => !prev);
-
-    const pageIndex = parseInt(params.id) + 1;
-
-    navigate(
-      "/detail-video/" + (pageIndex > DataVideos.length ? 1 : pageIndex)
-    );
+    if (!isPlay){
+      result['recordedBlobsState'] = recordedBlobsState;
+      result['codecPreferences'] = codecPreferences.current;
+  
+      setIsPlay(false);
+      setMediaRecorderState(null);
+      setNewPage((prev) => !prev);
+  
+      let pageIndex = parseInt(params.id) + 1;
+  
+      let isRecorder = result.recordedBlobsState?.find((res) => res.id == pageIndex);
+      while (isRecorder?.response != null) {
+        pageIndex += 1;
+        isRecorder = result.recordedBlobsState?.find((res) => res.id == pageIndex);
+      }
+  
+      navigate(
+        "/detail-video/" + (pageIndex > DataVideos.length ? 1 : pageIndex)
+      );
+    }
   };
+
+  const handleClickEnd = () => {
+    console.log("terminar");
+
+    if (!isPlay){
+      result['recordedBlobsState'] = recordedBlobsState;
+      result['codecPreferences'] = codecPreferences.current;
+
+      setIsPlay(false);
+      setMediaRecorderState(null);
+      setNewPage((prev) => !prev);
+      navigate(
+        "/"
+      );
+    }
+    
+  };
+
 
   // console.log(recordedBlobsState);
   // console.log(params);
@@ -287,9 +312,10 @@ const DetailVideo = () => {
       <CardBody>
         {
         recordedBlobsState.find((video) => video.id == params.id).response == null ? (
-          <video id="gum" playsInline autoPlay muted ref={videoGum}></video>
+            <video id="gum" playsInline autoPlay muted ref={videoGum}></video>
+            
         ) : (
-          <video id="recorded" playsInline loop></video>
+          <video id="recorded" playsInline loop ref={videoRecorder}></video>
         )}
 
         <div>
@@ -324,6 +350,8 @@ const DetailVideo = () => {
                 />
               </Box>
             ) : (
+              <>
+              <div className="blinking-dot"></div>
               <Box
                 position="relative"
                 bottom={0}
@@ -339,6 +367,7 @@ const DetailVideo = () => {
                   icon={<Icon as={ImStop} />}
                 />
               </Box>
+              </>
             )
           ) : (!isPlay ? (
             <Box
@@ -357,6 +386,9 @@ const DetailVideo = () => {
               />
             </Box>
           ) : (
+
+            <>
+            <div className="blinking-dot"></div>
             <Box
               position="relative"
               bottom={0}
@@ -372,6 +404,7 @@ const DetailVideo = () => {
                 icon={<Icon as={ImStop} />}
               />
             </Box>
+            </>
           ))
         }
         
@@ -395,7 +428,7 @@ const DetailVideo = () => {
               variant="link"
               colorScheme="telegram"
               aria-label="Play icon"
-              onClick={handleClickNext}
+              onClick={handleClickEnd}
               icon={<Icon as={ImCross} />}
             />
           ) : (

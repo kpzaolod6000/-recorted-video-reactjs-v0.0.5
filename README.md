@@ -2,7 +2,7 @@
 
 First:
 ```bash
-git clone https://github.com/kpzaolod6000/-sender-message-reactjs-v1.0.0 Public.git
+git clone https://github.com/kpzaolod6000/-sender-message-reactjs-v1.0.0.git
 
 ```
 After, run the development server:
